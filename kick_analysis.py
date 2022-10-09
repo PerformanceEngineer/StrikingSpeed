@@ -9,7 +9,6 @@ import tkinter as tk
 from tkinter import filedialog
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy import loadtxt
 #from datetime import datetime
 import math
 import statistics
@@ -57,13 +56,14 @@ def FindPeak(a, time_data, axis):
     xAxis = column(a,0)
     yAxis = column(a,1)
     zAxis = column(a,2)
+    aAxis = column(a,3)
     
     dominant_axis = column(a, axis)
     
     #index_max_x = max(range(len(xAxis)), key=xAxis.__getitem__)
     #index_max_y = max(range(len(yAxis)), key=yAxis.__getitem__)
     #index_max_z = max(range(len(zAxis)), key=zAxis.__getitem__)
-    index_max_d = max(range(len(dominant_axis)), key=dominant_axis.__getitem__)
+    index_max_d = np.argmax(dominant_axis) #max(range(len(dominant_axis)), key=dominant_axis.__getitem__)
     
     #index_max = max(index_max_x, index_max_y)
     #index_max = max(index_max, index_max_z)
@@ -72,18 +72,26 @@ def FindPeak(a, time_data, axis):
     index_max = index_max_d
     
     
-    xAxis = column(a[index_max - 20: index_max + 20],0)
-    yAxis = column(a[index_max - 20: index_max + 20],1)
-    zAxis = column(a[index_max - 20: index_max + 20],2)
-    td = time_data[index_max - 20: index_max + 20]
+    #xAxis = column(a[index_max - 30: index_max + 30],0)
+    #yAxis = column(a[index_max - 30: index_max + 30],1)
+    #zAxis = column(a[index_max - 30: index_max + 30],2)
+    #aAxis = column(a[index_max - 30: index_max + 30],3)
+    #td = time_data[index_max - 30: index_max + 30]
     
-    plt.plot(td, xAxis, 'b', label="ax")
-    plt.plot(td, yAxis, 'g', label="ay")
-    plt.plot(td, zAxis, 'r', label="az")
+    #plt.plot(td, xAxis, 'b', label="ax")
+    #plt.plot(td, yAxis, 'g', label="ay")
+    #plt.plot(td, zAxis, 'r', label="az")
+    #plt.plot(td, aAxis, 'k', label="aa")
+
+    plt.plot(time_data[index_max - 30: index_max + 30], a[index_max - 30: index_max + 30, 0], 'b', label='x')
+    plt.plot(time_data[index_max - 30: index_max + 30], a[index_max - 30: index_max + 30, 1], 'g', label='y')
+    plt.plot(time_data[index_max - 30: index_max + 30], a[index_max - 30: index_max + 30, 2], 'r', label='z')
+    plt.plot(time_data[index_max - 30: index_max + 30], a[index_max - 30: index_max + 30, 3], 'k', label='absolute')
     
-    plt.plot(td[20], xAxis[20], 'g*')
-    plt.plot(td[20], yAxis[20], 'b*')
-    plt.plot(td[20], zAxis[20], 'r*')
+    plt.plot(time_data[index_max], a[index_max, 0], 'b*')
+    plt.plot(time_data[index_max], a[index_max, 1], 'g*')
+    plt.plot(time_data[index_max], a[index_max, 2], 'r*')
+    plt.plot(time_data[index_max], a[index_max, 3], 'k*')
     
     plt.title('Peak Area')
     plt.xlabel('time')
@@ -101,7 +109,7 @@ def FindStart(a, time_data, threshold, dominant_axis):
     #xm = a[index_max, 0]
     #ym = a[index_max, 1]
     #zm = a[index_max, 2]
-    threshold = 0.00
+    #threshold = 0.00
     i = 0
     
     #slope_threshold = 0.03
@@ -165,7 +173,7 @@ def FindEnd(a, time_data, threshold, dominant_axis):
     i = 0
     
     dominant = a[index_max, dominant_axis]
-    while (dominant > threshold):
+    while (dominant > threshold and index_max + i < len(a)):
         #xm = a[index_max + i, 0]
         #ym = a[index_max + i, 1]
         #zm = a[index_max + i, 2]
@@ -202,12 +210,14 @@ def PlotPunch(a, time_data, initiation, end):
     xAxis = column(a[initiation: end],0)
     yAxis = column(a[initiation: end],1)
     zAxis = column(a[initiation: end],2)
+    aAxis = column(a[initiation: end],3)
     
     td = time_data[initiation: end]
     
     plt.plot(td, xAxis, 'b', label="ax")
     plt.plot(td, yAxis, 'g', label="ay")
     plt.plot(td, zAxis, 'r', label="az")
+    plt.plot(td, aAxis, 'k', label="aa")
     
     plt.title('Punch')
     plt.xlabel('time')
@@ -276,24 +286,17 @@ def CalcVelocity(a, time_data, initiation, end):
     rmss.append(0)
     
     for i in range(1,len(xAxis)-1):
-        if yaxis_label == "g":
+        dt = td[i] - last_t
         
-            vx = vx + xAxis[i] * (1.0 / 256.0) * 9.81# assume fixed step size for the moment; hack
-            vy = vy + yAxis[i] * (1.0 / 256.0) * 9.81# assume fixed step size for the moment; hack
-            vz = vz + zAxis[i] * (1.0 / 256.0) * 9.81# assume fixed step size for the moment; hack
+        #apply trapezoid rule integration
+        vx = vx + (xAxis[i] + xAxis[i-1]) * 0.5 * dt
+        vy = vy + (yAxis[i] + yAxis[i-1]) * 0.5 * dt
+        vz = vz + (zAxis[i] + zAxis[i-1]) * 0.5 * dt
         
-        else:
-            dt = td[i] - last_t
-            
-            #apply trapezoid rule integration
-            vx = vx + (xAxis[i] + xAxis[i-1]) * 0.5 * dt
-            vy = vy + (yAxis[i] + yAxis[i-1]) * 0.5 * dt
-            vz = vz + (zAxis[i] + zAxis[i-1]) * 0.5 * dt
-            
-            #calculate root mean square
-            rms_vel = rms_vel + math.sqrt((xAxis[i]*xAxis[i] + yAxis[i]*yAxis[i] + zAxis[i]*zAxis[i]) /  3.0) * dt
-            
-            last_t = td[i]
+        #calculate root mean square
+        rms_vel = rms_vel + math.sqrt((xAxis[i]*xAxis[i] + yAxis[i]*yAxis[i] + zAxis[i]*zAxis[i]) /  3.0) * dt
+        
+        last_t = td[i]
         
         velx.append(vx)
         vely.append(vy)
@@ -330,10 +333,11 @@ def CalcVelocity(a, time_data, initiation, end):
 ########################
 ### Plot remainder of acceleration curve after deleting previously analysed samples
 ########################
-def PlotRemaining(xAxis, yAxis, zAxis, time_data):
-    plt.plot(time_data, xAxis, 'r', label="ax")
-    plt.plot(time_data, yAxis, 'g', label="ay")
-    plt.plot(time_data, zAxis, 'b', label="az")
+def PlotRemaining(a, time_data):
+    plt.plot(time_data, a[:,0], 'r', label="ax")
+    plt.plot(time_data, a[:,1], 'g', label="ay")
+    plt.plot(time_data, a[:,2], 'b', label="az")
+    plt.plot(time_data, a[:,3], 'k', label="absolute")
     
     plt.title('Acceleration')
     plt.xlabel('time')
@@ -352,9 +356,6 @@ def FindLeftBoundary(a, time_data, threshold, start):
         i = i + 1
         value = abs(a[start - i, 0])
     return i
-
-
-
 
 ########################
 ### Plot dominant axis in black.
@@ -481,12 +482,10 @@ with open(file_path, newline='') as f:
 #             #if (timestamp - lsttimestamp < 0.0):
 #                 
 #             time_data.append(time_accum)
-#             #lsttimestamp = timestamp
+#             #lsttimestamp = timestamp       
+#     i = i+1
+# f.close()
 # =============================================================================
-        
-    #i = i+1
-#f.close()
-
 
 #### Configure analysis ####
 
@@ -499,27 +498,30 @@ num_samples = int(input())
 print("Please specify dominant axis (i.e., direction of punch; 0... x, 1... y, 2... z)")
 dominant_axis = int(input())
 
-
 PlotDominant(a, dominant_axis, time_data)
 
 
 vrmss = []
 for i in range (0,num_samples):
-    xAxis = column(a,0)
-    yAxis = column(a,1)
-    zAxis = column(a,2)
-    PlotRemaining(xAxis, yAxis, zAxis, time_data)
+    #xAxis = column(a,0)
+    #yAxis = column(a,1)
+    #zAxis = column(a,2)
+    PlotRemaining(a, time_data)
     
     #dominant_axis = 1#ssFindDominantAxis(a, time_data)
-    index_max = FindPeak(a, time_data, dominant_axis)
-    start = FindStart(a, time_data, threshold, dominant_axis)
+    index_max = FindPeak(a, time_data, 3)
+    start = FindStart(a, time_data, threshold, 3)
+    end = index_max
+    
+    
+    
     #start = FindStart(a, time_data, threshold, 1)# dominant_axis)
     #start = FindBaseline(a, time_data, start, threshold, -1)
     #second_peak = FindSubPeak(a, time_data, start, index_max + 20, 0)
     
     #z = index_max
     #index_max=second_peak
-    end = FindEnd(a, time_data, threshold, dominant_axis) #0)# dominant_axis)
+    index_end = FindEnd(a, time_data, threshold, dominant_axis) 
     #end = FindEnd(a, time_data, threshold, 0)
     #end = FindBaseline(a, time_data, end, threshold, 1)
     #index_max = z
@@ -534,10 +536,11 @@ for i in range (0,num_samples):
     #yAxis = column(a,1)
     #zAxis = column(a,2)
     
-    for i in range(start, end):
+    for i in range(start, index_end):
         a[i, 0] = 0.0
         a[i, 1] = 0.0
         a[i, 2] = 0.0
+        a[i, 3] = 0.0
     
     #xAxis = xAxis[:start] + xAxis[end:]
     #yAxis = yAxis[:start] + yAxis[end:]
@@ -560,4 +563,3 @@ print("sample mean: " + str(m) + " m/s")
 print("sample deviation: " + str(d))
 print("sample variance: " + str(v))
 print("#################################")
-
