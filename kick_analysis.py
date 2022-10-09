@@ -432,6 +432,8 @@ with open(file_path, newline='') as f:
     time_data = npdata[:,0]
     a = npdata[:,1:5]
 
+sample_duration = time_data[1] - time_data[0]
+
 # =============================================================================
 # f = open(file_path, "r")
 # for x in f:
@@ -488,16 +490,17 @@ with open(file_path, newline='') as f:
 # =============================================================================
 
 #### Configure analysis ####
-
+print("Dataset: ", file_path)
 print("Please specify velocity threshold (default = 0.0)")
 threshold = float(input())
 
 print("Please specify number of samples to analyse")
 num_samples = int(input())
 
-print("Please specify dominant axis (i.e., direction of punch; 0... x, 1... y, 2... z)")
-dominant_axis = int(input())
+#print("Please specify dominant axis (i.e., direction of punch; 0... x, 1... y, 2... z)")
+#dominant_axis = int(input())
 
+dominant_axis=3
 PlotDominant(a, dominant_axis, time_data)
 
 
@@ -521,7 +524,7 @@ for i in range (0,num_samples):
     
     #z = index_max
     #index_max=second_peak
-    index_end = FindEnd(a, time_data, threshold, dominant_axis) 
+    #index_end = FindEnd(a, time_data, threshold, dominant_axis) 
     #end = FindEnd(a, time_data, threshold, 0)
     #end = FindBaseline(a, time_data, end, threshold, 1)
     #index_max = z
@@ -536,11 +539,23 @@ for i in range (0,num_samples):
     #yAxis = column(a,1)
     #zAxis = column(a,2)
     
-    for i in range(start, index_end):
+    #for i in range(start, index_end):
+    #    a[i, 0] = 0.0
+    #    a[i, 1] = 0.0
+    #    a[i, 2] = 0.0
+    #    a[i, 3] = 0.0
+    
+    #remove 1 sec of data around the impact
+    
+    steps = int(0.5 / sample_duration)
+    for i in range(index_max - steps,index_max + steps):
         a[i, 0] = 0.0
         a[i, 1] = 0.0
         a[i, 2] = 0.0
         a[i, 3] = 0.0
+    
+    print("Next Sample")
+    
     
     #xAxis = xAxis[:start] + xAxis[end:]
     #yAxis = yAxis[:start] + yAxis[end:]
