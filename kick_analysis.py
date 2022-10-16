@@ -219,7 +219,7 @@ def PlotPunch(a, time_data, initiation, end):
     plt.plot(td, zAxis, 'r', label="az")
     plt.plot(td, aAxis, 'k', label="aa")
     
-    plt.title('Punch')
+    plt.title('Kick')
     plt.xlabel('time')
     plt.ylabel(yaxis_label)
     plt.legend(loc="upper left")
@@ -265,15 +265,18 @@ def CalcVelocity(a, time_data, initiation, end):
     xAxis = column(a[initiation: end],0)
     yAxis = column(a[initiation: end],1)
     zAxis = column(a[initiation: end],2)
+    aAxis = column(a[initiation: end],3)
     td = time_data[initiation: end]
     
     vx = 0.0
     vy = 0.0
     vz = 0.0
+    va = 0.0
     
     velx = [0]
     vely = [0]
     velz = [0]
+    vela = [0]
     
     last_t = td[0]
     
@@ -283,6 +286,8 @@ def CalcVelocity(a, time_data, initiation, end):
     velx.append(0)
     vely.append(0)
     velz.append(0)
+    vela.append(0)
+
     rmss.append(0)
     
     for i in range(1,len(xAxis)-1):
@@ -292,6 +297,7 @@ def CalcVelocity(a, time_data, initiation, end):
         vx = vx + (xAxis[i] + xAxis[i-1]) * 0.5 * dt
         vy = vy + (yAxis[i] + yAxis[i-1]) * 0.5 * dt
         vz = vz + (zAxis[i] + zAxis[i-1]) * 0.5 * dt
+        va = va + (aAxis[i] + aAxis[i-1]) * 0.5 * dt
         
         #calculate root mean square
         rms_vel = rms_vel + math.sqrt((xAxis[i]*xAxis[i] + yAxis[i]*yAxis[i] + zAxis[i]*zAxis[i]) /  3.0) * dt
@@ -301,12 +307,14 @@ def CalcVelocity(a, time_data, initiation, end):
         velx.append(vx)
         vely.append(vy)
         velz.append(vz)
+        vela.append(va)
         rmss.append(rms_vel)
         
     
     plt.plot(td, velx, 'b', label="vx")
     plt.plot(td, vely, 'g', label="vy")
     plt.plot(td, velz, 'r', label="vz")
+    plt.plot(td, velz, 'k', label="absolute")
     plt.plot(td, rmss, 'y', label="vrms")
     
     plt.title('Velocity')
@@ -324,6 +332,9 @@ def CalcVelocity(a, time_data, initiation, end):
     
     vzm = max(velz)
     print ("Max z velocity: " + str(vzm))
+
+    vam = max(vela)
+    print ("Max abs velocity: " + str(vam))
     
     vrmsm = max(rmss)
     print ("Max rms velocity: " + str(vrmsm))
@@ -334,6 +345,19 @@ def CalcVelocity(a, time_data, initiation, end):
 ### Plot remainder of acceleration curve after deleting previously analysed samples
 ########################
 def PlotRemaining(a, time_data):
+    """
+    Plot remaining Samples
+
+    Parameters
+    ----------
+    a : float[]
+        acceleration data.
+    time_data : float[]
+        time stamps.
+
+    """
+    
+    
     plt.plot(time_data, a[:,0], 'r', label="ax")
     plt.plot(time_data, a[:,1], 'g', label="ay")
     plt.plot(time_data, a[:,2], 'b', label="az")
