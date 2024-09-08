@@ -3,6 +3,7 @@
 Created on Sun Aug 14 16:52:55 2022
 
 @author: Lukas Pezenka
+Deprecated. Use kick_analysis.py.
 """
 
 import tkinter as tk
